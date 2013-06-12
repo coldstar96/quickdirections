@@ -1,0 +1,30 @@
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# generated files
+bin/
+gen/
+
+# libraries
+#libs/
+
+# Editor specific configuration
+.settings/
+.metadata/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Eclipse project files
+.classpath
+.project
+
+# Misc other files to hide
+*.swp
+
+# Remove those damnable .DS_Store files
+# that Macs think should be thrown everywhere
+.DS_Store

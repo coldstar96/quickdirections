@@ -1,0 +1,429 @@
+package com.detail.quickdirections.view;
+
+import android.graphics.Color;
+import android.location.Location;
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.util.Log;
+import android.view.View;
+import android.widget.CheckBox;
+import android.widget.RadioGroup;
+import android.widget.RadioGroup.OnCheckedChangeListener;
+
+import com.detail.quickdirections.R;
+import com.detail.quickdirections.model.GMapV2Direction;
+import com.detail.quickdirections.model.GetDirectionsAsyncTask;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
+import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
+import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+
+// show information about route (time, distance)
+// draw circle on each direction
+// start button to show turn by turn clicking next button(back button also)
+// follow button function
+// change bike, drive, walking button style, checkbox style
+// reverse button(swap from/to)
+// search addresses (both from to address -> click on map autofills search textedits)
+// settings with default search settings
+// loading progress thing
+
+public class MainActivity extends FragmentActivity implements OnMapClickListener,
+OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
+
+	private GoogleMap map;
+	GMapV2Direction md;
+
+	public final String TAG = "MainActivity";
+
+	String mode;
+
+	LatLng fromPosition;
+	LatLng toPosition;
+
+	Marker fromMarker;
+	Marker toMarker;
+
+	Polyline polyLine;
+
+	CheckBox checkboxView;
+	RadioGroup radioGroupView;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+
+
+		checkboxView = (CheckBox) findViewById(R.id.checkBox1);
+		radioGroupView = (RadioGroup) findViewById(R.id.radioGroup1);
+
+		radioGroupView.check(QuickDirectionsApp.modeId);
+
+
+		setMode(QuickDirectionsApp.modeId);
+
+		checkboxView.setChecked(QuickDirectionsApp.checked);
+
+
+		map = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
+		md = new GMapV2Direction();
+
+		map.moveCamera(CameraUpdateFactory.newCameraPosition(QuickDirectionsApp.cp));
+
+		map.setMyLocationEnabled(true);
+
+		// show current location
+		//		Location myLocation = map.getMyLocation();
+		//		if (myLocation != null) {
+		//			LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+		//			map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f));
+		//		}
+
+
+		//		map.setOnMyLocationChangeListener(new OnMyLocationChangeListener() {
+		//
+		//			@Override
+		//			public void onMyLocationChange(Location location) {
+		//				// TODO Auto-generated method stub
+		//				LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+		//				map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f));
+		//			}
+		//		});
+
+
+		map.setOnMapClickListener(this);
+
+
+//		map.setOnMapClickListener(new OnMapClickListener() {
+//
+//			@Override
+//			public void onMapClick(LatLng point) {
+//				// TODO Auto-generated method stub
+//				Log.d(TAG, ""+point.latitude+","+point.longitude);
+//
+//				if(checkboxView.isChecked()){
+//					if(polyLine != null){
+//						polyLine.remove();
+//						fromMarker.remove();
+//						toMarker.remove();
+//						toPosition = null;
+//					}
+//					Location loc = map.getMyLocation();
+//					if(loc !=null) {
+//						fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
+//						toPosition = point;
+//
+//						fromMarker = map.addMarker(new MarkerOptions()
+//						.position(fromPosition)
+//						.title("From")
+//						.draggable(true)
+//						.icon(BitmapDescriptorFactory
+//								.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+//
+//						toMarker = map.addMarker(new MarkerOptions()
+//						.position(toPosition)
+//						.title("To")
+//						.draggable(true)
+//						.icon(BitmapDescriptorFactory
+//								.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+//						findDirections();
+//					} else {
+//						// toast
+//					}
+//				} else if(fromPosition != null && toPosition == null) {
+//					toPosition = point;
+//					toMarker = map.addMarker(new MarkerOptions()
+//					.position(toPosition)
+//					.title("To")
+//					.draggable(true)
+//					.icon(BitmapDescriptorFactory
+//							.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+//					findDirections();
+//				}else{
+//					if(polyLine != null){
+//						polyLine.remove();
+//						fromMarker.remove();
+//						toMarker.remove();
+//						toPosition = null;
+//					}
+//					fromPosition = point;
+//					fromMarker = map.addMarker(new MarkerOptions()
+//					.position(fromPosition)
+//					.title("From")
+//					.draggable(true)
+//					.icon(BitmapDescriptorFactory
+//							.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+//				}
+//			}
+//		});
+
+
+		map.setOnMapLongClickListener(this);
+//		map.setOnMapLongClickListener(new OnMapLongClickListener() {
+//
+//			@Override
+//			public void onMapLongClick(LatLng point) {
+//				// TODO Auto-generated method stub
+//
+//			}
+//		});
+
+
+
+		radioGroupView.setOnCheckedChangeListener(this);
+//		radioGroupView.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+//			@Override
+//			public void onCheckedChanged(RadioGroup arg0, int checkId) {
+//				Log.d(TAG,""+checkId);
+//				setMode(checkId);
+//				refresh();
+//			}
+//		});
+
+
+		map.setOnMarkerDragListener(this);
+//		map.setOnMarkerDragListener(new OnMarkerDragListener() {
+//
+//			@Override
+//			public void onMarkerDragStart(Marker marker) {
+//				// TODO Auto-generated method stub
+//
+//			}
+//
+//			@Override
+//			public void onMarkerDragEnd(Marker marker) {
+//				// TODO Auto-generated method stub
+//				if(marker.getTitle().equals("From")){
+//					fromPosition = marker.getPosition();
+//					checkboxView.setChecked(false);
+//				} else {
+//					toPosition = marker.getPosition();
+//				}
+//				refresh();
+//				Log.d(TAG, "end");
+//			}
+//
+//			@Override
+//			public void onMarkerDrag(Marker marker) {
+//				// TODO Auto-generated method stub
+//
+//			}
+//		});
+	}
+
+	public void changeCurrent(View view){
+		if(checkboxView.isChecked()){
+			if(polyLine != null){
+				polyLine.remove();
+				fromMarker.remove();
+				toMarker.remove();
+			}
+		}
+	}
+
+	public void setMode(int id) {
+		switch (id) {
+		case R.id.radio0:
+			mode = "driving";
+			break;
+		case R.id.radio1:
+			mode = "bicycling";
+			break;
+		case R.id.radio2:
+			mode = "walking";
+			break;
+		case R.id.radio3:
+			mode = "transit";
+			break;
+		}
+	}
+
+	public void refresh(){
+		if(toPosition !=null) {
+			polyLine.remove();
+			findDirections();
+		}
+	}
+
+	public void clearPositions(){
+
+		if(fromMarker !=null){
+			fromPosition = null;
+		}
+	}
+
+	@Override
+	public void onMapLongClick(LatLng point) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onMapClick(LatLng point) {
+		Log.d(TAG, "Clicked"+point.latitude+","+point.longitude);
+
+		if(checkboxView.isChecked()){
+			if(polyLine != null){
+				polyLine.remove();
+				fromMarker.remove();
+				toMarker.remove();
+				toPosition = null;
+			}
+			Location loc = map.getMyLocation();
+			if(loc !=null) {
+				fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
+				toPosition = point;
+
+				fromMarker = map.addMarker(new MarkerOptions()
+				.position(fromPosition)
+				.title("From")
+				.draggable(true)
+				.icon(BitmapDescriptorFactory
+						.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+
+				toMarker = map.addMarker(new MarkerOptions()
+				.position(toPosition)
+				.title("To")
+				.draggable(true)
+				.icon(BitmapDescriptorFactory
+						.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+				findDirections();
+			} else {
+				// toast
+			}
+		} else if(fromPosition != null && toPosition == null) {
+			toPosition = point;
+			toMarker = map.addMarker(new MarkerOptions()
+			.position(toPosition)
+			.title("To")
+			.draggable(true)
+			.icon(BitmapDescriptorFactory
+					.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+			findDirections();
+		}else{
+			if(polyLine != null){
+				polyLine.remove();
+				fromMarker.remove();
+				toMarker.remove();
+				toPosition = null;
+			}
+			fromPosition = point;
+			fromMarker = map.addMarker(new MarkerOptions()
+			.position(fromPosition)
+			.title("From")
+			.draggable(true)
+			.icon(BitmapDescriptorFactory
+					.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+		}
+
+	}
+
+	@Override
+	public void onBackPressed() {
+		// TODO Auto-generated method stub
+		if(toPosition !=null) {
+			toPosition = null;
+			toMarker.remove();
+			polyLine.remove();
+		} else if(fromPosition != null) {
+			fromPosition = null;
+			fromMarker.remove();
+		} else {
+			QuickDirectionsApp.cp = map.getCameraPosition();
+			QuickDirectionsApp.checked = checkboxView.isChecked();
+			QuickDirectionsApp.modeId = radioGroupView.getCheckedRadioButtonId();
+			super.onBackPressed();
+		}
+	}
+
+	public void handleGetDirectionsResult(ArrayList<LatLng> directionPoints) {
+		// make route fit on screen
+		LatLngBounds.Builder builder = new LatLngBounds.Builder();
+		builder.include(toPosition);
+		builder.include(fromPosition);
+
+
+		GoogleMap mMap = ((SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
+		PolylineOptions rectLine = new PolylineOptions().width(7).color(Color.BLUE);
+		for(int i = 0 ; i < directionPoints.size() ; i++){
+			LatLng temp = directionPoints.get(i);
+			rectLine.add(temp);
+			builder.include(temp);
+		}
+		//circleoption
+		if(polyLine !=null) {
+			polyLine.remove();
+		}
+		polyLine = mMap.addPolyline(rectLine);
+
+
+
+		LatLngBounds bounds = builder.build();
+
+		int padding = 100; // offset from edges of the map in pixels
+		CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+
+		map.animateCamera(cu);
+	}
+
+
+	@SuppressWarnings("unchecked")
+	public void findDirections() {
+
+		Map<String, String> map = new HashMap<String, String>();
+		map.put(GetDirectionsAsyncTask.USER_CURRENT_LAT, String.valueOf(fromPosition.latitude));
+		map.put(GetDirectionsAsyncTask.USER_CURRENT_LONG, String.valueOf(fromPosition.longitude));
+		map.put(GetDirectionsAsyncTask.DESTINATION_LAT, String.valueOf(toPosition.latitude));
+		map.put(GetDirectionsAsyncTask.DESTINATION_LONG, String.valueOf(toPosition.longitude));
+		map.put(GetDirectionsAsyncTask.DIRECTIONS_MODE, mode);
+
+		GetDirectionsAsyncTask asyncTask = new GetDirectionsAsyncTask(this);
+		asyncTask.execute(map);
+	}
+
+	@Override
+	public void onMarkerDrag(Marker marker) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void onMarkerDragEnd(Marker marker) {
+		// TODO Auto-generated method stub
+		if(marker.getTitle().equals("From")){
+			fromPosition = marker.getPosition();
+			checkboxView.setChecked(false);
+		} else {
+			toPosition = marker.getPosition();
+		}
+		refresh();
+	}
+
+	@Override
+	public void onMarkerDragStart(Marker marker) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void onCheckedChanged(RadioGroup group, int checkedId) {
+		// TODO Auto-generated method stub
+		Log.d(TAG,""+checkedId);
+		setMode(checkedId);
+		refresh();
+	}
+}
