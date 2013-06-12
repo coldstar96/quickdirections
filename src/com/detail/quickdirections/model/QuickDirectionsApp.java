@@ -1,4 +1,4 @@
-package com.detail.quickdirections.view;
+package com.detail.quickdirections.model;
 import android.app.Application;
 import android.content.Context;
 

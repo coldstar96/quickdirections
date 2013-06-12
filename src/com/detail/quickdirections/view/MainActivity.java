@@ -13,6 +13,7 @@ import android.widget.RadioGroup.OnCheckedChangeListener;
 import com.detail.quickdirections.R;
 import com.detail.quickdirections.model.GMapV2Direction;
 import com.detail.quickdirections.model.GetDirectionsAsyncTask;
+import com.detail.quickdirections.model.QuickDirectionsApp;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -46,7 +47,7 @@ import java.util.Map;
 public class MainActivity extends FragmentActivity implements OnMapClickListener,
 OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 
-	private GoogleMap map;
+	private GoogleMap mapView;
 	GMapV2Direction md;
 
 	public final String TAG = "MainActivity";
@@ -69,11 +70,16 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		md = new GMapV2Direction();
 
+		// setup views
+		mapView = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
 		checkboxView = (CheckBox) findViewById(R.id.checkBox1);
 		radioGroupView = (RadioGroup) findViewById(R.id.radioGroup1);
 
 		radioGroupView.check(QuickDirectionsApp.modeId);
+		mapView.moveCamera(CameraUpdateFactory.newCameraPosition(QuickDirectionsApp.cp));
+
 
 
 		setMode(QuickDirectionsApp.modeId);
@@ -81,150 +87,16 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 		checkboxView.setChecked(QuickDirectionsApp.checked);
 
 
-		map = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
-		md = new GMapV2Direction();
-
-		map.moveCamera(CameraUpdateFactory.newCameraPosition(QuickDirectionsApp.cp));
-
-		map.setMyLocationEnabled(true);
-
-		// show current location
-		//		Location myLocation = map.getMyLocation();
-		//		if (myLocation != null) {
-		//			LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-		//			map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f));
-		//		}
-
-
-		//		map.setOnMyLocationChangeListener(new OnMyLocationChangeListener() {
-		//
-		//			@Override
-		//			public void onMyLocationChange(Location location) {
-		//				// TODO Auto-generated method stub
-		//				LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-		//				map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f));
-		//			}
-		//		});
-
-
-		map.setOnMapClickListener(this);
-
-
-//		map.setOnMapClickListener(new OnMapClickListener() {
-//
-//			@Override
-//			public void onMapClick(LatLng point) {
-//				// TODO Auto-generated method stub
-//				Log.d(TAG, ""+point.latitude+","+point.longitude);
-//
-//				if(checkboxView.isChecked()){
-//					if(polyLine != null){
-//						polyLine.remove();
-//						fromMarker.remove();
-//						toMarker.remove();
-//						toPosition = null;
-//					}
-//					Location loc = map.getMyLocation();
-//					if(loc !=null) {
-//						fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
-//						toPosition = point;
-//
-//						fromMarker = map.addMarker(new MarkerOptions()
-//						.position(fromPosition)
-//						.title("From")
-//						.draggable(true)
-//						.icon(BitmapDescriptorFactory
-//								.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
-//
-//						toMarker = map.addMarker(new MarkerOptions()
-//						.position(toPosition)
-//						.title("To")
-//						.draggable(true)
-//						.icon(BitmapDescriptorFactory
-//								.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
-//						findDirections();
-//					} else {
-//						// toast
-//					}
-//				} else if(fromPosition != null && toPosition == null) {
-//					toPosition = point;
-//					toMarker = map.addMarker(new MarkerOptions()
-//					.position(toPosition)
-//					.title("To")
-//					.draggable(true)
-//					.icon(BitmapDescriptorFactory
-//							.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
-//					findDirections();
-//				}else{
-//					if(polyLine != null){
-//						polyLine.remove();
-//						fromMarker.remove();
-//						toMarker.remove();
-//						toPosition = null;
-//					}
-//					fromPosition = point;
-//					fromMarker = map.addMarker(new MarkerOptions()
-//					.position(fromPosition)
-//					.title("From")
-//					.draggable(true)
-//					.icon(BitmapDescriptorFactory
-//							.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
-//				}
-//			}
-//		});
-
-
-		map.setOnMapLongClickListener(this);
-//		map.setOnMapLongClickListener(new OnMapLongClickListener() {
-//
-//			@Override
-//			public void onMapLongClick(LatLng point) {
-//				// TODO Auto-generated method stub
-//
-//			}
-//		});
 
 
 
+		// setup listeners
+		mapView.setMyLocationEnabled(true);
+		mapView.setOnMapClickListener(this);
+		mapView.setOnMapLongClickListener(this);
+		mapView.setOnMarkerDragListener(this);
 		radioGroupView.setOnCheckedChangeListener(this);
-//		radioGroupView.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-//			@Override
-//			public void onCheckedChanged(RadioGroup arg0, int checkId) {
-//				Log.d(TAG,""+checkId);
-//				setMode(checkId);
-//				refresh();
-//			}
-//		});
 
-
-		map.setOnMarkerDragListener(this);
-//		map.setOnMarkerDragListener(new OnMarkerDragListener() {
-//
-//			@Override
-//			public void onMarkerDragStart(Marker marker) {
-//				// TODO Auto-generated method stub
-//
-//			}
-//
-//			@Override
-//			public void onMarkerDragEnd(Marker marker) {
-//				// TODO Auto-generated method stub
-//				if(marker.getTitle().equals("From")){
-//					fromPosition = marker.getPosition();
-//					checkboxView.setChecked(false);
-//				} else {
-//					toPosition = marker.getPosition();
-//				}
-//				refresh();
-//				Log.d(TAG, "end");
-//			}
-//
-//			@Override
-//			public void onMarkerDrag(Marker marker) {
-//				// TODO Auto-generated method stub
-//
-//			}
-//		});
 	}
 
 	public void changeCurrent(View view){
@@ -285,19 +157,19 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 				toMarker.remove();
 				toPosition = null;
 			}
-			Location loc = map.getMyLocation();
+			Location loc = mapView.getMyLocation();
 			if(loc !=null) {
 				fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
 				toPosition = point;
 
-				fromMarker = map.addMarker(new MarkerOptions()
+				fromMarker = mapView.addMarker(new MarkerOptions()
 				.position(fromPosition)
 				.title("From")
 				.draggable(true)
 				.icon(BitmapDescriptorFactory
 						.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
 
-				toMarker = map.addMarker(new MarkerOptions()
+				toMarker = mapView.addMarker(new MarkerOptions()
 				.position(toPosition)
 				.title("To")
 				.draggable(true)
@@ -309,7 +181,7 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 			}
 		} else if(fromPosition != null && toPosition == null) {
 			toPosition = point;
-			toMarker = map.addMarker(new MarkerOptions()
+			toMarker = mapView.addMarker(new MarkerOptions()
 			.position(toPosition)
 			.title("To")
 			.draggable(true)
@@ -324,7 +196,7 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 				toPosition = null;
 			}
 			fromPosition = point;
-			fromMarker = map.addMarker(new MarkerOptions()
+			fromMarker = mapView.addMarker(new MarkerOptions()
 			.position(fromPosition)
 			.title("From")
 			.draggable(true)
@@ -345,7 +217,7 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 			fromPosition = null;
 			fromMarker.remove();
 		} else {
-			QuickDirectionsApp.cp = map.getCameraPosition();
+			QuickDirectionsApp.cp = mapView.getCameraPosition();
 			QuickDirectionsApp.checked = checkboxView.isChecked();
 			QuickDirectionsApp.modeId = radioGroupView.getCheckedRadioButtonId();
 			super.onBackPressed();
@@ -379,7 +251,7 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 		int padding = 100; // offset from edges of the map in pixels
 		CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
 
-		map.animateCamera(cu);
+		mapView.animateCamera(cu);
 	}
 
 
