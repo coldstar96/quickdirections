@@ -83,7 +83,6 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 		checkboxView.setChecked(QuickDirectionsApp.checked);
 
 
-
 		// setup listeners
 		mapView.setMyLocationEnabled(true);
 		mapView.setOnMapClickListener(this);
@@ -209,7 +208,7 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 
 
 		GoogleMap mMap = ((SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
-		PolylineOptions rectLine = new PolylineOptions().width(7).color(Color.TRANSPARENT);
+		PolylineOptions rectLine = new PolylineOptions().width(7).color(Color.BLUE);
 		for(int i = 0 ; i < directionPoints.size() ; i++){
 			LatLng temp = directionPoints.get(i);
 			rectLine.add(temp);

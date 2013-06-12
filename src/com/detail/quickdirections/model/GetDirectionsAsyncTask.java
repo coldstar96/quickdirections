@@ -18,16 +18,12 @@ public class GetDirectionsAsyncTask extends AsyncTask<Map<String, String>, Objec
 	public static final String DESTINATION_LONG = "destination_long";
 	public static final String DIRECTIONS_MODE = "directions_mode";
 	private final MainActivity activity;
-	private String url;
 
 	private Exception exception;
 
-	public GetDirectionsAsyncTask(MainActivity activity /*String url*/)
-	{
+	public GetDirectionsAsyncTask(MainActivity activity /*String url*/) {
 		super();
 		this.activity = activity;
-
-		//  this.url = url;
 	}
 
 	@Override
