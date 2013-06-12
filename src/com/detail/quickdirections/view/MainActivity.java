@@ -11,7 +11,6 @@ import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 
 import com.detail.quickdirections.R;
-import com.detail.quickdirections.model.GMapV2Direction;
 import com.detail.quickdirections.model.GetDirectionsAsyncTask;
 import com.detail.quickdirections.model.QuickDirectionsApp;
 import com.google.android.gms.maps.CameraUpdate;
@@ -41,36 +40,35 @@ import java.util.Map;
 // change bike, drive, walking button style, checkbox style
 // reverse button(swap from/to)
 // search addresses (both from to address -> click on map autofills search textedits)
-// settings with default search settings
+// settings with default search settings, auto fit screen, remember last selections
 // loading progress thing
 
 public class MainActivity extends FragmentActivity implements OnMapClickListener,
 OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 
-	private GoogleMap mapView;
-	GMapV2Direction md;
-
 	public final String TAG = "MainActivity";
 
-	String mode;
+	private GoogleMap mapView;
+	private CheckBox checkboxView;
+	private RadioGroup radioGroupView;
 
-	LatLng fromPosition;
-	LatLng toPosition;
 
-	Marker fromMarker;
-	Marker toMarker;
+	private String mode;
+
+	private LatLng fromPosition;
+	private LatLng toPosition;
+
+	private Marker fromMarker;
+	private Marker toMarker;
 
 	Polyline polyLine;
 
-	CheckBox checkboxView;
-	RadioGroup radioGroupView;
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
-		md = new GMapV2Direction();
 
 		// setup views
 		mapView = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
@@ -78,15 +76,11 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 		radioGroupView = (RadioGroup) findViewById(R.id.radioGroup1);
 
 		radioGroupView.check(QuickDirectionsApp.modeId);
+
+		// setup
 		mapView.moveCamera(CameraUpdateFactory.newCameraPosition(QuickDirectionsApp.cp));
-
-
-
 		setMode(QuickDirectionsApp.modeId);
-
 		checkboxView.setChecked(QuickDirectionsApp.checked);
-
-
 
 
 
@@ -97,16 +91,6 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 		mapView.setOnMarkerDragListener(this);
 		radioGroupView.setOnCheckedChangeListener(this);
 
-	}
-
-	public void changeCurrent(View view){
-		if(checkboxView.isChecked()){
-			if(polyLine != null){
-				polyLine.remove();
-				fromMarker.remove();
-				toMarker.remove();
-			}
-		}
 	}
 
 	public void setMode(int id) {
@@ -127,16 +111,20 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 	}
 
 	public void refresh(){
-		if(toPosition !=null) {
-			polyLine.remove();
+		mapView.clear();
+		if (fromPosition != null) {
+			fromMarker = setFromMarker();
+		}
+		if (toPosition != null) {
+			toMarker = setToMarker();
 			findDirections();
 		}
 	}
 
-	public void clearPositions(){
-
-		if(fromMarker !=null){
-			fromPosition = null;
+	// called from layout
+	public void changeCurrent(View view){
+		if(checkboxView.isChecked()){
+			clearAll();
 		}
 	}
 
@@ -146,64 +134,53 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 
 	}
 
+	// needs refactoring
 	@Override
 	public void onMapClick(LatLng point) {
 		Log.d(TAG, "Clicked"+point.latitude+","+point.longitude);
 
 		if(checkboxView.isChecked()){
-			if(polyLine != null){
-				polyLine.remove();
-				fromMarker.remove();
-				toMarker.remove();
-				toPosition = null;
-			}
+			clearAll();
 			Location loc = mapView.getMyLocation();
 			if(loc !=null) {
 				fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
 				toPosition = point;
-
-				fromMarker = mapView.addMarker(new MarkerOptions()
-				.position(fromPosition)
-				.title("From")
-				.draggable(true)
-				.icon(BitmapDescriptorFactory
-						.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
-
-				toMarker = mapView.addMarker(new MarkerOptions()
-				.position(toPosition)
-				.title("To")
-				.draggable(true)
-				.icon(BitmapDescriptorFactory
-						.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+				fromMarker = setFromMarker();
+				toMarker = setToMarker();
 				findDirections();
 			} else {
-				// toast
+				// Toast
 			}
 		} else if(fromPosition != null && toPosition == null) {
 			toPosition = point;
-			toMarker = mapView.addMarker(new MarkerOptions()
-			.position(toPosition)
-			.title("To")
-			.draggable(true)
-			.icon(BitmapDescriptorFactory
-					.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+			toMarker = setToMarker();
 			findDirections();
 		}else{
-			if(polyLine != null){
-				polyLine.remove();
-				fromMarker.remove();
-				toMarker.remove();
-				toPosition = null;
-			}
+			clearAll();
 			fromPosition = point;
-			fromMarker = mapView.addMarker(new MarkerOptions()
-			.position(fromPosition)
-			.title("From")
-			.draggable(true)
-			.icon(BitmapDescriptorFactory
-					.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+			fromMarker = setFromMarker();
 		}
 
+	}
+
+	public Marker setToMarker(){
+		return mapView.addMarker(new MarkerOptions().position(toPosition)
+				.title("To").draggable(true).icon(BitmapDescriptorFactory
+						.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+	}
+
+	public Marker setFromMarker(){
+		return mapView.addMarker(new MarkerOptions().position(fromPosition)
+				.title("From").draggable(true).icon(BitmapDescriptorFactory
+						.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+	}
+
+	public void clearAll() {
+		mapView.clear();
+		fromPosition = null;
+		toPosition = null;
+		fromMarker = null;
+		toMarker = null;
 	}
 
 	@Override
@@ -232,19 +209,19 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 
 
 		GoogleMap mMap = ((SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
-		PolylineOptions rectLine = new PolylineOptions().width(7).color(Color.BLUE);
+		PolylineOptions rectLine = new PolylineOptions().width(7).color(Color.TRANSPARENT);
 		for(int i = 0 ; i < directionPoints.size() ; i++){
 			LatLng temp = directionPoints.get(i);
 			rectLine.add(temp);
 			builder.include(temp);
 		}
+
 		//circleoption
+
 		if(polyLine !=null) {
 			polyLine.remove();
 		}
 		polyLine = mMap.addPolyline(rectLine);
-
-
 
 		LatLngBounds bounds = builder.build();
 
