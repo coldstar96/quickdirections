@@ -1,0 +1,5 @@
+quickly changing among driving, bicycling, walking leaves paths on map.
+
+quickly picking start and dest also leaves paths
+
+multiple markers

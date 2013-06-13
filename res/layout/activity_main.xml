@@ -31,55 +31,77 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="65sp"
+        android:layout_centerHorizontal="true"
         android:orientation="horizontal" >
 
         <ImageButton
             android:id="@+id/driving"
-            android:layout_width="50sp"
-            android:layout_height="50sp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_gravity="center_vertical"
-            android:contentDescription="@string/driving"
-            android:onClick="setMode"
+            android:layout_marginLeft="15dp"
+            android:onClick="onModeClicked"
             android:src="@drawable/driving" />
 
         <ImageButton
             android:id="@+id/transit"
-            android:layout_width="50sp"
-            android:layout_height="50sp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_gravity="center_vertical"
-            android:contentDescription="@string/transit"
-            android:onClick="setMode"
+            android:onClick="onModeClicked"
             android:src="@drawable/transit" />
 
         <ImageButton
             android:id="@+id/walking"
-            android:layout_width="50sp"
-            android:layout_height="50sp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_gravity="center_vertical"
-            android:contentDescription="@string/walking"
-            android:onClick="setMode"
+            android:onClick="onModeClicked"
             android:src="@drawable/walking" />
 
         <ImageButton
             android:id="@+id/bicycling"
-            android:layout_width="50sp"
-            android:layout_height="50sp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_gravity="center_vertical"
-            android:contentDescription="@string/bicycling"
-            android:onClick="setMode"
+            android:layout_marginRight="15dp"
+            android:onClick="onModeClicked"
             android:src="@drawable/bicycling" />
 
         <ImageButton
             android:id="@+id/use_current_location"
-            android:layout_width="50sp"
-            android:layout_height="50sp"
-            android:layout_gravity="center_vertical"
-            android:layout_marginLeft="20sp"
-            android:contentDescription="@string/use_current_location"
-            android:onClick="setCurrentLoc"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginLeft="15dp"
+            android:onClick="onCurrentClicked"
             android:src="@drawable/currentloc" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/search_stuff"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal" >
+
+        <AutoCompleteTextView
+            android:id="@+id/search_text"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:completionThreshold="1"
+            android:imeOptions="actionNext"
+            android:singleLine="true" />
+
+        <ImageButton
+            android:id="@+id/search"
+            android:layout_width="57sp"
+            android:layout_height="57sp"
+            android:layout_above="@+id/modes"
+            android:layout_alignRight="@+id/modes"
+            android:onClick="onSearch"
+            android:src="@drawable/search" />
     </LinearLayout>
 
 </RelativeLayout>
