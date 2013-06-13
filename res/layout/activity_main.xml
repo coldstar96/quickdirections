@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_marginRight="60sp"
+        android:layout_marginRight="65sp"
         android:orientation="horizontal" >
 
         <ImageButton
