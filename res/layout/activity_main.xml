@@ -31,7 +31,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="60sp"
         android:orientation="horizontal" >
 
         <ImageButton
@@ -39,7 +40,6 @@
             android:layout_width="50sp"
             android:layout_height="50sp"
             android:layout_gravity="center_vertical"
-            android:layout_margin="0dp"
             android:contentDescription="@string/driving"
             android:onClick="setMode"
             android:src="@drawable/driving" />
@@ -49,7 +49,6 @@
             android:layout_width="50sp"
             android:layout_height="50sp"
             android:layout_gravity="center_vertical"
-            android:layout_margin="0dp"
             android:contentDescription="@string/transit"
             android:onClick="setMode"
             android:src="@drawable/transit" />
@@ -59,7 +58,6 @@
             android:layout_width="50sp"
             android:layout_height="50sp"
             android:layout_gravity="center_vertical"
-            android:layout_margin="0dp"
             android:contentDescription="@string/walking"
             android:onClick="setMode"
             android:src="@drawable/walking" />
@@ -69,7 +67,6 @@
             android:layout_width="50sp"
             android:layout_height="50sp"
             android:layout_gravity="center_vertical"
-            android:layout_margin="0dp"
             android:contentDescription="@string/bicycling"
             android:onClick="setMode"
             android:src="@drawable/bicycling" />
