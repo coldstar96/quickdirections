@@ -8,5 +8,6 @@
     <string name="transit">Transit</string>
     <string name="bicycling">Bicycling</string>
     <string name="use_current_location">Uses current Location as starting point</string>
+    <string name="search">Search</string>
 
 </resources>

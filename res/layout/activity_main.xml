@@ -40,6 +40,7 @@
             android:layout_height="40dp"
             android:layout_gravity="center_vertical"
             android:layout_marginLeft="15dp"
+            android:contentDescription="@string/driving"
             android:onClick="onModeClicked"
             android:src="@drawable/driving" />
 
@@ -48,6 +49,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_gravity="center_vertical"
+            android:contentDescription="@string/transit"
             android:onClick="onModeClicked"
             android:src="@drawable/transit" />
 
@@ -56,6 +58,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_gravity="center_vertical"
+            android:contentDescription="@string/walking"
             android:onClick="onModeClicked"
             android:src="@drawable/walking" />
 
@@ -65,6 +68,7 @@
             android:layout_height="40dp"
             android:layout_gravity="center_vertical"
             android:layout_marginRight="15dp"
+            android:contentDescription="@string/bicycling"
             android:onClick="onModeClicked"
             android:src="@drawable/bicycling" />
 
@@ -73,6 +77,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginLeft="15dp"
+            android:contentDescription="@string/use_current_location"
             android:onClick="onCurrentClicked"
             android:src="@drawable/currentloc" />
     </LinearLayout>
@@ -96,10 +101,9 @@
 
         <ImageButton
             android:id="@+id/search"
-            android:layout_width="57sp"
-            android:layout_height="57sp"
-            android:layout_above="@+id/modes"
-            android:layout_alignRight="@+id/modes"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:contentDescription="@string/search"
             android:onClick="onSearch"
             android:src="@drawable/search" />
     </LinearLayout>

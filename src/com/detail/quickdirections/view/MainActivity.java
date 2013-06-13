@@ -199,9 +199,6 @@ OnMapLongClickListener, OnMarkerDragListener, OnMyLocationChangeListener, OnMark
 
 	public void refresh(){
 		mapView.clear();
-		for(Marker m : searchMarkers) {
-			m.setVisible(true);
-		}
 		if (fromPosition != null) {
 			if(currentLoc){
 				Location loc = mapView.getMyLocation();
