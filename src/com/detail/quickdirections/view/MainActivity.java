@@ -1,14 +1,12 @@
 package com.detail.quickdirections.view;
 
 import android.graphics.Color;
+import android.graphics.PorterDuff.Mode;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.RadioGroup;
-import android.widget.RadioGroup.OnCheckedChangeListener;
 
 import com.detail.quickdirections.R;
 import com.detail.quickdirections.model.GetDirectionsAsyncTask;
@@ -42,18 +40,20 @@ import java.util.Map;
 // search addresses (both from to address -> click on map autofills search textedits)
 // settings with default search settings, auto fit screen, remember last selections
 // loading progress thing
+// satellite view
+// longclick -> bookmark
+// cancel asnctask
 
 public class MainActivity extends FragmentActivity implements OnMapClickListener,
-OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
+OnMapLongClickListener, OnMarkerDragListener{
 
 	public final String TAG = "MainActivity";
 
 	private GoogleMap mapView;
-	private CheckBox checkboxView;
-	private RadioGroup radioGroupView;
 
 
-	private String mode;
+	private int mode;
+	private boolean currentLoc;
 
 	private LatLng fromPosition;
 	private LatLng toPosition;
@@ -61,7 +61,7 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 	private Marker fromMarker;
 	private Marker toMarker;
 
-	Polyline polyLine;
+	private Polyline polyLine;
 
 
 
@@ -72,41 +72,48 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 
 		// setup views
 		mapView = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
-		checkboxView = (CheckBox) findViewById(R.id.checkBox1);
-		radioGroupView = (RadioGroup) findViewById(R.id.radioGroup1);
 
-		radioGroupView.check(QuickDirectionsApp.modeId);
+		// set button background
+		setButtonBackgrounds();
 
 		// setup
 		mapView.moveCamera(CameraUpdateFactory.newCameraPosition(QuickDirectionsApp.cp));
-		setMode(QuickDirectionsApp.modeId);
-		checkboxView.setChecked(QuickDirectionsApp.checked);
-
+		mode = QuickDirectionsApp.modeId;
+		setMode(findViewById(QuickDirectionsApp.modeId));
+		currentLoc = !QuickDirectionsApp.curLoc;
+		setCurrentLoc(findViewById(R.id.use_current_location));
 
 		// setup listeners
 		mapView.setMyLocationEnabled(true);
 		mapView.setOnMapClickListener(this);
 		mapView.setOnMapLongClickListener(this);
 		mapView.setOnMarkerDragListener(this);
-		radioGroupView.setOnCheckedChangeListener(this);
-
 	}
 
-	public void setMode(int id) {
-		switch (id) {
-		case R.id.radio0:
-			mode = "driving";
-			break;
-		case R.id.radio1:
-			mode = "bicycling";
-			break;
-		case R.id.radio2:
-			mode = "walking";
-			break;
-		case R.id.radio3:
-			mode = "transit";
-			break;
+	public void setButtonBackgrounds(){
+		findViewById(R.id.driving).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
+		findViewById(R.id.transit).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
+		findViewById(R.id.walking).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
+		findViewById(R.id.bicycling).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
+		findViewById(R.id.use_current_location).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
+	}
+
+	// also called from layout
+	public void setMode(View view) {
+		findViewById(mode).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
+		view.getBackground().setColorFilter(0x8033bfe5, Mode.MULTIPLY);
+		mode = view.getId();
+		refresh();
+	}
+
+	public void setCurrentLoc(View view) {
+		if(currentLoc) {
+			view.getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
+		} else {
+			view.getBackground().setColorFilter(0x8033bfe5, Mode.MULTIPLY);
+			clearAll();
 		}
+		currentLoc = !currentLoc;
 	}
 
 	public void refresh(){
@@ -117,13 +124,6 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 		if (toPosition != null) {
 			toMarker = setToMarker();
 			findDirections();
-		}
-	}
-
-	// called from layout
-	public void changeCurrent(View view){
-		if(checkboxView.isChecked()){
-			clearAll();
 		}
 	}
 
@@ -138,7 +138,7 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 	public void onMapClick(LatLng point) {
 		Log.d(TAG, "Clicked"+point.latitude+","+point.longitude);
 
-		if(checkboxView.isChecked()){
+		if(currentLoc){
 			clearAll();
 			Location loc = mapView.getMyLocation();
 			if(loc !=null) {
@@ -194,8 +194,8 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 			fromMarker.remove();
 		} else {
 			QuickDirectionsApp.cp = mapView.getCameraPosition();
-			QuickDirectionsApp.checked = checkboxView.isChecked();
-			QuickDirectionsApp.modeId = radioGroupView.getCheckedRadioButtonId();
+			QuickDirectionsApp.curLoc = currentLoc;
+			QuickDirectionsApp.modeId = mode;
 			super.onBackPressed();
 		}
 	}
@@ -205,7 +205,6 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 		LatLngBounds.Builder builder = new LatLngBounds.Builder();
 		builder.include(toPosition);
 		builder.include(fromPosition);
-
 
 		GoogleMap mMap = ((SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
 		PolylineOptions rectLine = new PolylineOptions().width(7).color(Color.BLUE);
@@ -239,10 +238,23 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 		map.put(GetDirectionsAsyncTask.USER_CURRENT_LONG, String.valueOf(fromPosition.longitude));
 		map.put(GetDirectionsAsyncTask.DESTINATION_LAT, String.valueOf(toPosition.latitude));
 		map.put(GetDirectionsAsyncTask.DESTINATION_LONG, String.valueOf(toPosition.longitude));
-		map.put(GetDirectionsAsyncTask.DIRECTIONS_MODE, mode);
+		map.put(GetDirectionsAsyncTask.DIRECTIONS_MODE, modeToString());
 
 		GetDirectionsAsyncTask asyncTask = new GetDirectionsAsyncTask(this);
 		asyncTask.execute(map);
+	}
+
+	public String modeToString(){
+		if(mode == R.id.driving) {
+			return "driving";
+		}
+		if(mode == R.id.transit) {
+			return "transit";
+		}
+		if(mode == R.id.walking) {
+			return "walking";
+		}
+		return "bicycling";
 	}
 
 	@Override
@@ -255,7 +267,9 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 		// TODO Auto-generated method stub
 		if(marker.getTitle().equals("From")){
 			fromPosition = marker.getPosition();
-			checkboxView.setChecked(false);
+			if(currentLoc) {
+				setCurrentLoc(findViewById(R.id.use_current_location));
+			}
 		} else {
 			toPosition = marker.getPosition();
 		}
@@ -265,13 +279,5 @@ OnMapLongClickListener, OnMarkerDragListener, OnCheckedChangeListener{
 	@Override
 	public void onMarkerDragStart(Marker marker) {
 		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void onCheckedChanged(RadioGroup group, int checkedId) {
-		// TODO Auto-generated method stub
-		Log.d(TAG,""+checkedId);
-		setMode(checkedId);
-		refresh();
 	}
 }

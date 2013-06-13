@@ -12,8 +12,8 @@ public class QuickDirectionsApp extends Application{
 
 	// change position depending on locale
 	public static CameraPosition cp = new CameraPosition(new LatLng(39.0, -96.0), 1, 0, 0);
-	public static int modeId = R.id.radio0;
-	public static boolean checked = true;
+	public static int modeId = R.id.driving;
+	public static boolean curLoc = true;
 
 	@Override
 	public void onCreate() {

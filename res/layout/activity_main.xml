@@ -26,47 +26,63 @@
         android:layout_height="match_parent"
         class="com.google.android.gms.maps.SupportMapFragment" />
 
-    <RadioGroup
-        android:id="@+id/radioGroup1"
+    <LinearLayout
+        android:id="@+id/modes"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true" >
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal" >
 
-        <RadioButton
-            android:id="@+id/radio0"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="Driving" />
+        <ImageButton
+            android:id="@+id/driving"
+            android:layout_width="50sp"
+            android:layout_height="50sp"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="0dp"
+            android:contentDescription="@string/driving"
+            android:onClick="setMode"
+            android:src="@drawable/driving" />
 
-        <RadioButton
-            android:id="@+id/radio1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Bicycling" />
+        <ImageButton
+            android:id="@+id/transit"
+            android:layout_width="50sp"
+            android:layout_height="50sp"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="0dp"
+            android:contentDescription="@string/transit"
+            android:onClick="setMode"
+            android:src="@drawable/transit" />
 
-        <RadioButton
-            android:id="@+id/radio2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Walking" />
+        <ImageButton
+            android:id="@+id/walking"
+            android:layout_width="50sp"
+            android:layout_height="50sp"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="0dp"
+            android:contentDescription="@string/walking"
+            android:onClick="setMode"
+            android:src="@drawable/walking" />
 
-        <RadioButton
-            android:id="@+id/radio3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Transit" />
-    </RadioGroup>
+        <ImageButton
+            android:id="@+id/bicycling"
+            android:layout_width="50sp"
+            android:layout_height="50sp"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="0dp"
+            android:contentDescription="@string/bicycling"
+            android:onClick="setMode"
+            android:src="@drawable/bicycling" />
 
-    <CheckBox
-        android:id="@+id/checkBox1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/radioGroup1"
-        android:checked="true"
-        android:onClick="changeCurrent"
-        android:text="From Current Location" />
+        <ImageButton
+            android:id="@+id/use_current_location"
+            android:layout_width="50sp"
+            android:layout_height="50sp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="20sp"
+            android:contentDescription="@string/use_current_location"
+            android:onClick="setCurrentLoc"
+            android:src="@drawable/currentloc" />
+    </LinearLayout>
 
 </RelativeLayout>
