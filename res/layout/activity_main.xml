@@ -43,7 +43,7 @@
             android:contentDescription="@string/driving"
             android:onClick="onModeClicked"
             android:src="@drawable/driving" />
-
+<!-- 
         <ImageButton
             android:id="@+id/transit"
             android:layout_width="40dp"
@@ -52,7 +52,7 @@
             android:contentDescription="@string/transit"
             android:onClick="onModeClicked"
             android:src="@drawable/transit" />
-
+ -->
         <ImageButton
             android:id="@+id/walking"
             android:layout_width="40dp"
@@ -96,16 +96,17 @@
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:completionThreshold="1"
-            android:imeOptions="actionNext"
+            android:imeOptions="actionSearch"
+            android:hint="@string/search"
             android:singleLine="true" />
-
+<!-- 
         <ImageButton
             android:id="@+id/search"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:contentDescription="@string/search"
             android:onClick="onSearch"
-            android:src="@drawable/search" />
+            android:src="@drawable/search" /> -->
     </LinearLayout>
 
 </RelativeLayout>

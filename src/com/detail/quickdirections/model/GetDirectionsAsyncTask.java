@@ -35,9 +35,9 @@ public class GetDirectionsAsyncTask extends AsyncTask<Map<String, String>, Objec
 		}
 	}
 
+
 	@Override
 	protected ArrayList<LatLng> doInBackground(Map<String, String>... params) {
-
 		Map<String, String> paramMap = params[0];
 		try{
 			LatLng fromPosition = new LatLng(Double.valueOf(paramMap.get(USER_CURRENT_LAT)) , Double.valueOf(paramMap.get(USER_CURRENT_LONG)));

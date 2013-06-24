@@ -8,22 +8,29 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
 
 import com.detail.quickdirections.R;
 import com.detail.quickdirections.model.GetDirectionsAsyncTask;
+import com.detail.quickdirections.model.GetPlacesAsyncTask;
 import com.detail.quickdirections.model.QuickDirectionsApp;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
-import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
@@ -61,12 +68,17 @@ import java.util.Set;
 // highlight text when textedit clicked
 
 public class MainActivity extends FragmentActivity implements OnMapClickListener,
-OnMapLongClickListener, OnMarkerDragListener, OnMyLocationChangeListener, OnMarkerClickListener{
+OnMapLongClickListener, OnMarkerDragListener, OnInfoWindowClickListener,
+OnMarkerClickListener, OnEditorActionListener{
 
 	public final String TAG = "MainActivity";
+	public GetDirectionsAsyncTask asyncTask = new GetDirectionsAsyncTask(this);
+
+
+	public final int MAX_RESULT = 100;
 
 	private GoogleMap mapView;
-	private EditText searchView;
+	private AutoCompleteTextView searchView;
 
 
 	private int mode;
@@ -88,9 +100,14 @@ OnMapLongClickListener, OnMarkerDragListener, OnMyLocationChangeListener, OnMark
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+
+
+
+
+
 		// setup views
 		mapView = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
-		searchView = (EditText) findViewById(R.id.search_text);
+		searchView = (AutoCompleteTextView) findViewById(R.id.search_text);
 
 		// Find ZoomControl view
 		mapView.getUiSettings().setAllGesturesEnabled(true);
@@ -113,58 +130,41 @@ OnMapLongClickListener, OnMarkerDragListener, OnMyLocationChangeListener, OnMark
 		mapView.setOnMapClickListener(this);
 		mapView.setOnMapLongClickListener(this);
 		mapView.setOnMarkerDragListener(this);
-		mapView.setOnMyLocationChangeListener(this);
 		mapView.setOnMarkerClickListener(this);
+		mapView.setOnInfoWindowClickListener(this);
+		searchView.setOnEditorActionListener(this);
 
-	}
+		// autocomplete
+		searchView.addTextChangedListener(new TextWatcher() {
 
-
-
-	public void onSearch(View view){
-		for(Marker m : searchMarkers){
-			m.remove();
-		}
-		searchMarkers.clear();
-
-		InputMethodManager imm = (InputMethodManager) getSystemService(
-				Context.INPUT_METHOD_SERVICE);
-		imm.hideSoftInputFromWindow(searchView.getWindowToken(), 0);
-
-		String address = searchView.getText().toString();
-		Geocoder geoCoder = new Geocoder(getBaseContext(), Locale.getDefault());
-		try {
-
-			//List<Address> addresses = geoCoder.getFromLocation(toPosition.latitude, toPosition.longitude, 4);
-			List<Address> addresses = geoCoder.getFromLocationName(address, 100);
-			Collections.sort(addresses, new AddressComparator());
-			if (addresses.size() > 0) {
-
-				LatLngBounds.Builder builder = new LatLngBounds.Builder();
-
-				Location myLoc = mapView.getMyLocation();
-				builder.include(new LatLng(myLoc.getLatitude(),myLoc.getLongitude()));
-				int size = Math.min(1, addresses.size());
-				for (int i = 0; i<size; i++){
-					String strCompleteAddress= "";
-					for (int j=0; j<addresses.get(i).getMaxAddressLineIndex();j++) {
-						strCompleteAddress+= addresses.get(i).getAddressLine(j) + "\n";
-					}
-					LatLng temp = new LatLng(addresses.get(i).getLatitude(), addresses.get(i).getLongitude());
-					searchMarkers.add(setSearchMarker(temp, strCompleteAddress));
-					builder.include(temp);
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				if (count%3 == 1) {
+					//we don't want to make an insanely large array, so we clear it each time
+					//					adapter.clear();
+					//create the task
+					GetPlacesAsyncTask task = new GetPlacesAsyncTask(MainActivity.this, s.toString());
+					//now pass the argument in the textview to the task
+					task.execute(searchView.getText().toString());
 				}
-				LatLngBounds bounds = builder.build();
-				int padding = 200; // offset from edges of the map in pixels
-				CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
-				mapView.animateCamera(cu);
+
+
 
 			}
-//			Toast.makeText(getBaseContext(), strCompleteAddress, Toast.LENGTH_LONG).show();
-		}
-		catch (IOException e) {
-			Log.i("MyLocTAG => ", "this is the exception part");
-			e.printStackTrace();
-		}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void afterTextChanged(Editable s) {
+				// TODO Auto-generated method stub
+
+			}
+		});
 	}
 
 	public void setSearchText(View view){
@@ -173,7 +173,7 @@ OnMapLongClickListener, OnMarkerDragListener, OnMyLocationChangeListener, OnMark
 
 	public void setButtonBackgrounds(){
 		findViewById(R.id.driving).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
-		findViewById(R.id.transit).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
+		//		findViewById(R.id.transit).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
 		findViewById(R.id.walking).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
 		findViewById(R.id.bicycling).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
 		findViewById(R.id.use_current_location).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
@@ -188,75 +188,162 @@ OnMapLongClickListener, OnMarkerDragListener, OnMyLocationChangeListener, OnMark
 	}
 
 	public void onCurrentClicked(View view) {
-		if(currentLoc) {
-			view.getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
-		} else {
-			view.getBackground().setColorFilter(0x8033bfe5, Mode.MULTIPLY);
-			clearAll();
-		}
 		currentLoc = !currentLoc;
+
+		if(currentLoc) {
+			view.getBackground().setColorFilter(0x8033bfe5, Mode.MULTIPLY);
+			if(toPosition == null && fromPosition != null){
+				onMapClick(fromPosition);
+			}else{
+				refresh();
+			}
+		} else {
+			view.getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
+		}
 	}
 
 	public void refresh(){
-		mapView.clear();
-		if (fromPosition != null) {
-			if(currentLoc){
-				Location loc = mapView.getMyLocation();
-				fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
+		if(currentLoc && fromPosition != null) {
+			Location loc = mapView.getMyLocation();
+			fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
+			setFromMarker("From");
+			if(toPosition != null) {
+				findDirections();
 			}
-			fromMarker = setFromMarker();
 		}
-		if (toPosition != null) {
-			toMarker = setToMarker();
-			findDirections();
-		}
+
+
+
+
+		//		if (toPosition != null) {
+		//			polyLine.remove();
+		//			if(currentLoc){
+		//				Location loc = mapView.getMyLocation();
+		//				fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
+		//				setFromMarker("From");
+		//			}
+		//			findDirections();
+		//		}
+		//
+		//
+		//		if (fromMarker != null) {
+		//			fromMarker.remove();
+		//		}
+		//		if (toMarker != null) {
+		//			toMarker.remove();
+		//		}
+		//		if (polyLine != null) {
+		//			polyLine.remove();
+		//		}
+		//		if (fromPosition != null) {
+		//			if(currentLoc){
+		//				Location loc = mapView.getMyLocation();
+		//				fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
+		//			}
+		//			fromMarker = setFromMarker();
+		//		}
+		//		if (toPosition != null) {
+		//			toMarker = setToMarker();
+		//			findDirections();
+		//		}
 	}
 
 	@Override
 	public void onMapLongClick(LatLng point) {
-		// TODO Auto-generated method stub
 
+		LatLng temp = new LatLng(point.latitude, point.longitude);
+		Marker marker = setClickMarker(temp, getAddress(point));
+		marker.showInfoWindow();
+	}
+
+	public String getAddress(LatLng point) {
+
+		Geocoder geoCoder = new Geocoder(getBaseContext(), Locale.getDefault());
+		String strCompleteAddress = "";
+		try {
+
+			//List<Address> addresses = geoCoder.getFromLocation(toPosition.latitude, toPosition.longitude, 4);
+			List<Address> addresses = geoCoder.getFromLocation(point.latitude,  point.longitude, 1);
+			for (int j=0; j<addresses.get(0).getMaxAddressLineIndex();j++) {
+				strCompleteAddress+= addresses.get(0).getAddressLine(j) + "\n";
+			}
+		} catch (IOException e) {
+			Log.i("MyLocTAG => ", "this is the exception part");
+			e.printStackTrace();
+		}
+		return strCompleteAddress;
 	}
 
 	// needs refactoring
 	@Override
 	public void onMapClick(LatLng point) {
 		Log.d(TAG, "Clicked"+point.latitude+","+point.longitude);
-
-		if(currentLoc){
-			clearAll();
+		if (currentLoc) {
 			Location loc = mapView.getMyLocation();
-			if(loc !=null) {
-				fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
+			fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
+			toPosition = point;
+			setFromMarker("From");
+			setToMarker("To");
+			findDirections();
+		} else {
+			if (fromPosition == null) {
+				fromPosition = point;
+				setFromMarker("From");
+			} else if (toPosition == null) {
 				toPosition = point;
-				fromMarker = setFromMarker();
-				toMarker = setToMarker();
+				setToMarker("To");
 				findDirections();
 			} else {
-				// Toast
+				removeTo(true);
+				fromPosition = point;
+				setFromMarker("From");
 			}
-		} else if(fromPosition != null && toPosition == null) {
-			toPosition = point;
-			toMarker = setToMarker();
-			findDirections();
-		}else{
-			clearAll();
-			fromPosition = point;
-			fromMarker = setFromMarker();
 		}
 
+
+//		Log.d(TAG, "Clicked"+point.latitude+","+point.longitude);
+//		if (polyLine != null) {
+//			polyLine.remove();
+//		}
+//
+//		if(currentLoc){
+//			toPosition = point;
+//			setToMarker("To");
+//
+//			Location loc = mapView.getMyLocation();
+//			if(loc !=null) {
+//				fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
+//				setFromMarker("From");
+//				findDirections();
+//
+//			} else {
+//				// Toast
+//			}
+//		} else if(fromPosition != null && toPosition == null) {
+//			toPosition = point;
+//			setToMarker("To");
+//			findDirections();
+//		} else {
+//			fromPosition = point;
+//			setFromMarker("From");
+//		}
 	}
 
-	public Marker setToMarker(){
-		return mapView.addMarker(new MarkerOptions().position(toPosition)
-				.title("To").draggable(true).icon(BitmapDescriptorFactory
-						.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+	public void setToMarker(String s){
+		removeTo(false);
+		toMarker = mapView.addMarker(new MarkerOptions()
+		.position(toPosition).title(s)
+		.draggable(true).icon(BitmapDescriptorFactory
+				.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
 	}
 
-	public Marker setFromMarker(){
-		return mapView.addMarker(new MarkerOptions().position(fromPosition)
-				.title("From").draggable(true).icon(BitmapDescriptorFactory
-						.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+	public void setFromMarker(String s){
+		removeFrom(false);
+		fromMarker =  mapView.addMarker(new MarkerOptions()
+		.position(fromPosition).title(s)
+		.draggable(true).icon(BitmapDescriptorFactory
+				.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+
 	}
 
 	public Marker setSearchMarker(LatLng ll, String title){
@@ -265,24 +352,47 @@ OnMapLongClickListener, OnMarkerDragListener, OnMyLocationChangeListener, OnMark
 						.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)));
 	}
 
-	public void clearAll() {
-		mapView.clear();
-		fromPosition = null;
-		toPosition = null;
-		fromMarker = null;
-		toMarker = null;
+	public Marker setClickMarker(LatLng ll, String address){
+		return mapView.addMarker(new MarkerOptions().position(ll)
+				.title(address).icon(BitmapDescriptorFactory
+						.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
 	}
+
+	public void removeTo(boolean position) {
+		// double check
+		if(polyLine != null) {
+			polyLine.remove();
+		}
+		if (toMarker != null){
+			toMarker.remove();
+			toMarker = null;
+		}
+		if(position) {
+			toPosition = null;
+		}
+	}
+
+	public void removeFrom(boolean position) {
+		// double check
+		if(polyLine != null) {
+			polyLine.remove();
+		}
+		if (fromMarker != null){
+			fromMarker.remove();
+			fromMarker = null;
+		}
+		if(position) {
+			fromPosition = null;
+		}
+	}
+
 
 	@Override
 	public void onBackPressed() {
-		// TODO Auto-generated method stub
 		if(toPosition !=null) {
-			toPosition = null;
-			toMarker.remove();
-			polyLine.remove();
+			removeTo(true);
 		} else if(fromPosition != null) {
-			fromPosition = null;
-			fromMarker.remove();
+			removeFrom(true);
 		} else {
 			QuickDirectionsApp.cp = mapView.getCameraPosition();
 			QuickDirectionsApp.useCurrentChecked = currentLoc;
@@ -304,11 +414,6 @@ OnMapLongClickListener, OnMarkerDragListener, OnMyLocationChangeListener, OnMark
 			builder.include(temp);
 		}
 
-		//circleoption
-
-		if(polyLine !=null) {
-			polyLine.remove();
-		}
 		polyLine = mapView.addPolyline(rectLine);
 
 		LatLngBounds bounds = builder.build();
@@ -317,9 +422,32 @@ OnMapLongClickListener, OnMarkerDragListener, OnMyLocationChangeListener, OnMark
 		mapView.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
 	}
 
+	public void handleGetPlacesResult(ArrayList<String> result) {
+		//update the adapter
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(getBaseContext(), R.layout.list_item);
+		adapter.setNotifyOnChange(true);
+		//attach the adapter to textview
+		searchView.setAdapter(adapter);
+
+		for (String string : result){
+
+			Log.d("YourApp", "onPostExecute : result = " + string);
+			adapter.add(string);
+			adapter.notifyDataSetChanged();
+
+		}
+	}
+
 
 	@SuppressWarnings("unchecked")
 	public void findDirections() {
+		if(polyLine !=null) {
+			polyLine.remove();
+		}
+
+		if(asyncTask != null){
+			asyncTask.cancel(true);
+		}
 
 		Map<String, String> map = new HashMap<String, String>();
 		map.put(GetDirectionsAsyncTask.USER_CURRENT_LAT, String.valueOf(fromPosition.latitude));
@@ -328,16 +456,13 @@ OnMapLongClickListener, OnMarkerDragListener, OnMyLocationChangeListener, OnMark
 		map.put(GetDirectionsAsyncTask.DESTINATION_LONG, String.valueOf(toPosition.longitude));
 		map.put(GetDirectionsAsyncTask.DIRECTIONS_MODE, modeToString());
 
-		GetDirectionsAsyncTask asyncTask = new GetDirectionsAsyncTask(this);
+		asyncTask = new GetDirectionsAsyncTask(this);
 		asyncTask.execute(map);
 	}
 
 	public String modeToString(){
 		if(mode == R.id.driving) {
 			return "driving";
-		}
-		if(mode == R.id.transit) {
-			return "transit";
 		}
 		if(mode == R.id.walking) {
 			return "walking";
@@ -352,8 +477,7 @@ OnMapLongClickListener, OnMarkerDragListener, OnMyLocationChangeListener, OnMark
 
 	@Override
 	public void onMarkerDragEnd(Marker marker) {
-		// TODO Auto-generated method stub
-		if(marker.getTitle().equals("From")){
+		if(marker.equals(fromMarker)){
 			fromPosition = marker.getPosition();
 			if(currentLoc) {
 				onCurrentClicked(findViewById(R.id.use_current_location));
@@ -369,12 +493,7 @@ OnMapLongClickListener, OnMarkerDragListener, OnMyLocationChangeListener, OnMark
 		// TODO Auto-generated method stub
 	}
 
-	@Override
-	public void onMyLocationChange(Location location) {
-
-	}
-
-	public class AddressComparator implements Comparator<Address> {
+	public class AddressCameraComparator implements Comparator<Address> {
 
 		@Override
 		public int compare(Address a1, Address a2) {
@@ -396,11 +515,92 @@ OnMapLongClickListener, OnMarkerDragListener, OnMyLocationChangeListener, OnMark
 		}
 	}
 
+	public class AddressCurrentComparator implements Comparator<Address> {
+
+		@Override
+		public int compare(Address a1, Address a2) {
+			Location myLoc = mapView.getMyLocation();
+			double myLat = myLoc.getLatitude();
+			double myLng = myLoc.getLongitude();
+
+			double a1Lat = a1.getLatitude();
+			double a1Lng = a1.getLongitude();
+
+			double a1Distance = ((myLat-a1Lat)*(myLat-a1Lat)) + ((myLng-a1Lng)*(myLng-a1Lng));
+
+			double a2Lat = a2.getLatitude();
+			double a2Lng = a2.getLongitude();
+
+			double a2Distance = ((myLat-a2Lat)*(myLat-a2Lat)) + ((myLng-a2Lng)*(myLng-a2Lng));
+
+			return Double.compare(a1Distance, a2Distance);
+		}
+	}
+
 	@Override
 	public boolean onMarkerClick(Marker marker) {
 		if(searchMarkers.contains(marker)) {
 			onMapClick(marker.getPosition());
 		}
 		return false;
+	}
+
+
+	@Override
+	public boolean onEditorAction(TextView arg0, int arg1, KeyEvent arg2) {
+		for(Marker m : searchMarkers){
+			m.remove();
+		}
+		searchMarkers.clear();
+
+		InputMethodManager imm = (InputMethodManager) getSystemService(
+				Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(searchView.getWindowToken(), 0);
+
+		String address = searchView.getText().toString();
+		Geocoder geoCoder = new Geocoder(getBaseContext(), Locale.getDefault());
+		try {
+
+			//List<Address> addresses = geoCoder.getFromLocation(toPosition.latitude, toPosition.longitude, 4);
+			List<Address> addresses = geoCoder.getFromLocationName(address, MAX_RESULT);
+			int size = Math.min(1, addresses.size());
+
+			if (size > 0) {
+				LatLngBounds.Builder builder = new LatLngBounds.Builder();
+
+				Location myLoc = mapView.getMyLocation();
+				builder.include(new LatLng(myLoc.getLatitude(),myLoc.getLongitude()));
+
+				Collections.sort(addresses, new AddressCameraComparator());
+
+				for (int i = 0; i<addresses.size(); i++){
+					String strCompleteAddress= "";
+					for (int j=0; j<addresses.get(i).getMaxAddressLineIndex();j++) {
+						strCompleteAddress+= addresses.get(i).getAddressLine(j) + "\n";
+					}
+					LatLng temp = new LatLng(addresses.get(i).getLatitude(), addresses.get(i).getLongitude());
+					searchMarkers.add(setSearchMarker(temp, strCompleteAddress));
+					builder.include(temp);
+				}
+
+				LatLngBounds bounds = builder.build();
+				int padding = 200; // offset from edges of the map in pixels
+				CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+				mapView.animateCamera(cu);
+
+
+			}
+		}
+		catch (IOException e) {
+			Log.i("MyLocTAG => ", "this is the exception part");
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	@Override
+	public void onInfoWindowClick(Marker marker) {
+		Log.d(TAG, "info window clicked");
+		onMapClick(marker.getPosition());
 	}
 }
