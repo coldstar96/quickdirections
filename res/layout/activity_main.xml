@@ -27,6 +27,54 @@
         class="com.google.android.gms.maps.SupportMapFragment" />
 
     <LinearLayout
+        android:id="@+id/top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:orientation="vertical" >
+
+        <AutoCompleteTextView
+            android:id="@+id/search_text"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:completionThreshold="1"
+            android:hint="@string/search"
+            android:imeOptions="actionSearch"
+            android:singleLine="true" >
+
+            <requestFocus />
+        </AutoCompleteTextView>
+
+        <LinearLayout
+            android:id="@+id/summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/transparent"
+            android:orientation="horizontal"
+            android:onClick="onSummaryClick"
+            android:visibility="invisible" >
+
+            <ImageButton
+                android:id="@+id/summary_mode"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/mode"
+                android:onClick="onModeClicked"
+                android:src="@drawable/driving" />
+
+            <TextView
+                android:id="@+id/summary_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/modes"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -38,12 +86,11 @@
             android:id="@+id/driving"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_gravity="center_vertical"
-            android:layout_marginLeft="15dp"
+            android:layout_gravity="center"
             android:contentDescription="@string/driving"
             android:onClick="onModeClicked"
             android:src="@drawable/driving" />
-<!-- 
+        <!--
         <ImageButton
             android:id="@+id/transit"
             android:layout_width="40dp"
@@ -52,12 +99,13 @@
             android:contentDescription="@string/transit"
             android:onClick="onModeClicked"
             android:src="@drawable/transit" />
- -->
+        -->
+
         <ImageButton
             android:id="@+id/walking"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_gravity="center_vertical"
+            android:layout_gravity="center"
             android:contentDescription="@string/walking"
             android:onClick="onModeClicked"
             android:src="@drawable/walking" />
@@ -66,7 +114,7 @@
             android:id="@+id/bicycling"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_gravity="center_vertical"
+            android:layout_gravity="center"
             android:layout_marginRight="15dp"
             android:contentDescription="@string/bicycling"
             android:onClick="onModeClicked"
@@ -80,33 +128,6 @@
             android:contentDescription="@string/use_current_location"
             android:onClick="onCurrentClicked"
             android:src="@drawable/currentloc" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/search_stuff"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp"
-        android:orientation="horizontal" >
-
-        <AutoCompleteTextView
-            android:id="@+id/search_text"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:completionThreshold="1"
-            android:imeOptions="actionSearch"
-            android:hint="@string/search"
-            android:singleLine="true" />
-<!-- 
-        <ImageButton
-            android:id="@+id/search"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:contentDescription="@string/search"
-            android:onClick="onSearch"
-            android:src="@drawable/search" /> -->
     </LinearLayout>
 
 </RelativeLayout>
