@@ -118,9 +118,9 @@ public class GMapV2Direction {
         return node1.getTextContent();
     }
 
-    public ArrayList<Direction> getDirection (Document doc) {
+    public ArrayList<LatLng> getDirection (Document doc) {
         NodeList nl1, nl2, nl3;
-        ArrayList<Direction> listGeopoints = new ArrayList<Direction>();
+        ArrayList<LatLng> listGeopoints = new ArrayList<LatLng>();
         nl1 = doc.getElementsByTagName("step");
         if (nl1.getLength() > 0) {
             for (int i = 0; i < nl1.getLength(); i++) {
@@ -133,15 +133,14 @@ public class GMapV2Direction {
                 double lat = Double.parseDouble(latNode.getTextContent());
                 Node lngNode = nl3.item(getNodeIndex(nl3, "lng"));
                 double lng = Double.parseDouble(lngNode.getTextContent());
-                Node dirNode = nl3.item(getNodeIndex(nl3, "travel_mode"));
-                listGeopoints.add(new Direction(new LatLng(lat, lng), null, null, null));
+                listGeopoints.add(new LatLng(lat, lng));
 
                 locationNode = nl2.item(getNodeIndex(nl2, "polyline"));
                 nl3 = locationNode.getChildNodes();
                 latNode = nl3.item(getNodeIndex(nl3, "points"));
                 ArrayList<LatLng> arr = decodePoly(latNode.getTextContent());
                 for(int j = 0 ; j < arr.size() ; j++) {
-                    listGeopoints.add(new Direction(new LatLng(arr.get(j).latitude, arr.get(j).longitude), null, null, null));
+                    listGeopoints.add(new LatLng(arr.get(j).latitude, arr.get(j).longitude));
                 }
 
                 locationNode = nl2.item(getNodeIndex(nl2, "end_location"));
@@ -150,7 +149,7 @@ public class GMapV2Direction {
                 lat = Double.parseDouble(latNode.getTextContent());
                 lngNode = nl3.item(getNodeIndex(nl3, "lng"));
                 lng = Double.parseDouble(lngNode.getTextContent());
-                listGeopoints.add(new Direction(new LatLng(lat, lng), null, null, null));
+                listGeopoints.add(new LatLng(lat, lng));
             }
         }
 

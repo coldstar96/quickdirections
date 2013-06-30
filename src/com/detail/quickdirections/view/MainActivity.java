@@ -19,9 +19,9 @@ import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
+import android.widget.Toast;
 
 import com.detail.quickdirections.R;
-import com.detail.quickdirections.model.Direction;
 import com.detail.quickdirections.model.GetDirectionsAsyncTask;
 import com.detail.quickdirections.model.GetPlacesAsyncTask;
 import com.detail.quickdirections.model.QuickDirectionsApp;
@@ -240,11 +240,15 @@ OnMarkerClickListener, OnEditorActionListener{
 		Log.d(TAG, "Clicked"+point.latitude+","+point.longitude);
 		if (currentLoc) {
 			Location loc = mapView.getMyLocation();
-			fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
-			toPosition = point;
-			setFromMarker("From");
-			setToMarker("To");
-			findDirections();
+			if(loc == null){
+				Toast.makeText(this, "Current location is not ready yet.", Toast.LENGTH_SHORT).show();
+			} else {
+				fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
+				toPosition = point;
+				setFromMarker("From");
+				setToMarker("To");
+				findDirections();
+			}
 		} else {
 			if (fromPosition == null) {
 				fromPosition = point;
@@ -326,7 +330,7 @@ OnMarkerClickListener, OnEditorActionListener{
 			toMarker = null;
 		}
 		if(position && toPosition != null) {
-		//	setClickMarker(toPosition, "");
+			//	setClickMarker(toPosition, "");
 			toPosition = null;
 		}
 	}
@@ -360,7 +364,7 @@ OnMarkerClickListener, OnEditorActionListener{
 		}
 	}
 
-	public void handleGetDirectionsResult(ArrayList<Direction> result) {
+	public void handleGetDirectionsResult(ArrayList<LatLng> result) {
 		// make route fit on screen
 		LatLngBounds.Builder builder = new LatLngBounds.Builder();
 		builder.include(toPosition);
@@ -368,7 +372,7 @@ OnMarkerClickListener, OnEditorActionListener{
 
 		PolylineOptions rectLine = new PolylineOptions().width(7).color(Color.BLUE);
 		for(int i = 0 ; i < result.size() ; i++){
-			LatLng temp = result.get(i).latLng;
+			LatLng temp = result.get(i);
 			rectLine.add(temp);
 			builder.include(temp);
 		}

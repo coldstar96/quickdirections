@@ -70,6 +70,7 @@
                 android:id="@+id/summary_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="@color/white"
                 android:layout_gravity="center" />
         </LinearLayout>
     </LinearLayout>
