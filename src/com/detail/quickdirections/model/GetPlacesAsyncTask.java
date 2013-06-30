@@ -1,5 +1,6 @@
 package com.detail.quickdirections.model;
 
+import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -21,9 +22,9 @@ public class GetPlacesAsyncTask extends AsyncTask<String, Void, ArrayList<String
 	private final String s;
 	private final MainActivity activity;
 
-	public GetPlacesAsyncTask(MainActivity activity, String s){
+	public GetPlacesAsyncTask(Activity activity, String s){
 		this.s = s;
-		this.activity = activity;
+		this.activity = (MainActivity) activity;
 	}
 	@Override
 	// three dots is java for an array of strings

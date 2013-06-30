@@ -4,8 +4,11 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PorterDuff.Mode;
 import android.location.Address;
+import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.text.Editable;
@@ -16,7 +19,6 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
@@ -68,10 +70,11 @@ import java.util.Set;
 // cancel asnctask
 // max returned number of address when searched
 // highlight text when textedit clicked
+// undo, redo button (one query(find direction in certain mode) is one "do")
 
 public class MainActivity extends FragmentActivity implements OnMapClickListener,
 OnMapLongClickListener, OnMarkerDragListener, OnInfoWindowClickListener,
-OnMarkerClickListener, OnEditorActionListener{
+OnMarkerClickListener, OnEditorActionListener, LocationListener{
 
 	public final String TAG = "MainActivity";
 	public GetDirectionsAsyncTask asyncTask = new GetDirectionsAsyncTask(this);
@@ -83,7 +86,6 @@ OnMarkerClickListener, OnEditorActionListener{
 	private GoogleMap mapView;
 	private AutoCompleteTextView searchView;
 	private View summaryView;
-	private ImageView summaryModeView;
 	private TextView summaryTextView;
 
 
@@ -106,16 +108,10 @@ OnMarkerClickListener, OnEditorActionListener{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-
-
-
-
-
 		// setup views
 		mapView = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
 		searchView = (AutoCompleteTextView) findViewById(R.id.search_text);
 		summaryView = findViewById(R.id.summary);
-		summaryModeView = (ImageView) findViewById(R.id.summary_mode);
 		summaryTextView = (TextView) findViewById(R.id.summary_text);
 
 		// Find ZoomControl view
@@ -174,7 +170,19 @@ OnMarkerClickListener, OnEditorActionListener{
 
 			}
 		});
+
+
+
+
+		LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		Criteria crit = new Criteria();
+		crit.setAccuracy(Criteria.ACCURACY_FINE);
+		String provider = lm.getBestProvider(crit, true);
+		Location loc = lm.getLastKnownLocation(provider);
+		lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 200000, 100, this);
+
 	}
+
 
 	public void setSearchText(View view){
 		searchView.setSelectAllOnFocus(true);
@@ -574,5 +582,33 @@ OnMarkerClickListener, OnEditorActionListener{
 	public void onInfoWindowClick(Marker marker) {
 		Log.d(TAG, "info window clicked");
 		onMapClick(marker.getPosition());
+	}
+
+
+	@Override
+	public void onLocationChanged(Location arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+
+	@Override
+	public void onProviderDisabled(String arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+
+	@Override
+	public void onProviderEnabled(String arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+
+	@Override
+	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
+		// TODO Auto-generated method stub
+
 	}
 }

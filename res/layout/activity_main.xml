@@ -20,6 +20,13 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
+    <com.google.android.maps.MapView
+        android:id="@+id/mapview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:apiKey="AIzaSyBf5Bx6WuYSxapZ0Wp0Iw_1FprYQ2eLjt4"
+        android:clickable="true" />
+
     <fragment
         android:id="@+id/map"
         android:layout_width="match_parent"
@@ -53,8 +60,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/transparent"
-            android:orientation="horizontal"
+            android:clickable="true"
             android:onClick="onSummaryClick"
+            android:orientation="horizontal"
             android:visibility="invisible" >
 
             <ImageButton
@@ -70,8 +78,8 @@
                 android:id="@+id/summary_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:layout_gravity="center" />
+                android:layout_gravity="center"
+                android:textColor="@color/white" />
         </LinearLayout>
     </LinearLayout>
 

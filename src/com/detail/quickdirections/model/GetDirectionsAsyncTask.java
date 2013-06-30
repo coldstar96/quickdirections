@@ -1,5 +1,6 @@
 package com.detail.quickdirections.model;
 
+import android.app.Activity;
 import android.os.AsyncTask;
 
 import com.detail.quickdirections.view.MainActivity;
@@ -21,9 +22,9 @@ public class GetDirectionsAsyncTask extends AsyncTask<Map<String, String>, Objec
 
 	private Exception exception;
 
-	public GetDirectionsAsyncTask(MainActivity activity /*String url*/) {
+	public GetDirectionsAsyncTask(Activity activity /*String url*/) {
 		super();
-		this.activity = activity;
+		this.activity = (MainActivity) activity;
 	}
 
 	@Override
