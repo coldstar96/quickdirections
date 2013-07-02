@@ -4,21 +4,20 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PorterDuff.Mode;
 import android.location.Address;
-import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
@@ -27,7 +26,6 @@ import com.detail.quickdirections.R;
 import com.detail.quickdirections.model.GetDirectionsAsyncTask;
 import com.detail.quickdirections.model.GetPlacesAsyncTask;
 import com.detail.quickdirections.model.QuickDirectionsApp;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
@@ -71,13 +69,15 @@ import java.util.Set;
 // max returned number of address when searched
 // highlight text when textedit clicked
 // undo, redo button (one query(find direction in certain mode) is one "do")
+// clicking summary shows direction list on top of map
 
 public class MainActivity extends FragmentActivity implements OnMapClickListener,
 OnMapLongClickListener, OnMarkerDragListener, OnInfoWindowClickListener,
 OnMarkerClickListener, OnEditorActionListener, LocationListener{
 
 	public final String TAG = "MainActivity";
-	public GetDirectionsAsyncTask asyncTask = new GetDirectionsAsyncTask(this);
+	public GetDirectionsAsyncTask directionsAsyncTask;
+	public GetPlacesAsyncTask placesAsyncTask;
 
 
 	public final int MAX_RESULT = 100;
@@ -87,6 +87,8 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 	private AutoCompleteTextView searchView;
 	private View summaryView;
 	private TextView summaryTextView;
+	private ListView autoTextView;
+	private ImageButton summaryModeView;
 
 
 	private int mode;
@@ -102,6 +104,10 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 	private Polyline polyLine;
 
 
+	private LocationManager locationManager;
+
+
+	ArrayAdapter<String> adapter;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -113,6 +119,15 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 		searchView = (AutoCompleteTextView) findViewById(R.id.search_text);
 		summaryView = findViewById(R.id.summary);
 		summaryTextView = (TextView) findViewById(R.id.summary_text);
+		autoTextView = (ListView) findViewById(R.id.autotext);
+		summaryModeView = (ImageButton)findViewById(R.id.summary_mode);
+
+
+
+		adapter = new ArrayAdapter<String>(getBaseContext(), R.layout.list_item);
+		adapter.setNotifyOnChange(true);
+		autoTextView.setAdapter(adapter);
+
 
 		// Find ZoomControl view
 		mapView.getUiSettings().setAllGesturesEnabled(true);
@@ -140,47 +155,44 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 		searchView.setOnEditorActionListener(this);
 
 		// autocomplete
-		searchView.addTextChangedListener(new TextWatcher() {
-
-			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				if (count%3 == 1) {
-					//we don't want to make an insanely large array, so we clear it each time
-					//					adapter.clear();
-					//create the task
-					GetPlacesAsyncTask task = new GetPlacesAsyncTask(MainActivity.this, s.toString());
-					//now pass the argument in the textview to the task
-					task.execute(searchView.getText().toString());
-				}
-
-
-
-			}
-
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count,
-					int after) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void afterTextChanged(Editable s) {
-				// TODO Auto-generated method stub
-
-			}
-		});
+//		searchView.addTextChangedListener(new TextWatcher() {
+//
+//			@Override
+//			public void onTextChanged(CharSequence s, int start, int before, int count) {
+//				//create the task
+//				if(placesAsyncTask != null){
+//					placesAsyncTask.cancel(true);
+//				}
+//
+//				placesAsyncTask = new GetPlacesAsyncTask(MainActivity.this, s.toString());
+//				//now pass the argument in the textview to the task
+//				placesAsyncTask.execute("");
+//			}
+//
+//			@Override
+//			public void beforeTextChanged(CharSequence s, int start, int count,
+//					int after) {
+//				// TODO Auto-generated method stub
+//
+//			}
+//
+//			@Override
+//			public void afterTextChanged(Editable s) {
+//				// TODO Auto-generated method stub
+//
+//			}
+//		});
 
 
 
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//		Criteria crit = new Criteria();
+//		crit.setAccuracy(Criteria.ACCURACY_FINE);
+//		String provider = locationManager.getBestProvider(crit, true);
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, this);
 
-		LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		Criteria crit = new Criteria();
-		crit.setAccuracy(Criteria.ACCURACY_FINE);
-		String provider = lm.getBestProvider(crit, true);
-		Location loc = lm.getLastKnownLocation(provider);
-		lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 200000, 100, this);
 
+		mapView.setLocationSource(null);
 	}
 
 
@@ -189,18 +201,32 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 	}
 
 	public void setButtonBackgrounds(){
-		findViewById(R.id.driving).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
+		findViewById(R.id.driving).getBackground().setColorFilter(0x80000000, Mode.MULTIPLY);
 		//		findViewById(R.id.transit).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
-		findViewById(R.id.walking).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
-		findViewById(R.id.bicycling).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
-		findViewById(R.id.use_current_location).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
+		findViewById(R.id.walking).getBackground().setColorFilter(0x80000000, Mode.MULTIPLY);
+		findViewById(R.id.bicycling).getBackground().setColorFilter(0x80000000, Mode.MULTIPLY);
+		findViewById(R.id.use_current_location).getBackground().setColorFilter(0x80000000, Mode.MULTIPLY);
 	}
 
 	// also called from layout
 	public void onModeClicked(View view) {
-		findViewById(mode).getBackground().setColorFilter(0x40000000, Mode.MULTIPLY);
+
+		findViewById(mode).getBackground().setColorFilter(0x80000000, Mode.MULTIPLY);
 		view.getBackground().setColorFilter(0x8033bfe5, Mode.MULTIPLY);
 		mode = view.getId();
+
+		int res = 0;
+		String modeString = modeToString();
+		if (modeString.equals("driving")) {
+			res = R.drawable.driving;
+		} else if (modeString.equals("walking")) {
+			res = R.drawable.walking;
+		} else {
+			res = R.drawable.bicycling;
+		}
+		summaryModeView.setImageResource(res);
+		summaryModeView.getBackground().setColorFilter(0x00000000, Mode.MULTIPLY);
+
 		refresh();
 	}
 
@@ -249,7 +275,7 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 		if (currentLoc) {
 			Location loc = mapView.getMyLocation();
 			if(loc == null){
-				Toast.makeText(this, "Current location is not ready yet.", Toast.LENGTH_SHORT).show();
+				Toast.makeText(this, "Waiting for current location.", Toast.LENGTH_SHORT).show();
 			} else {
 				fromPosition = new LatLng(loc.getLatitude(),loc.getLongitude());
 				toPosition = point;
@@ -269,6 +295,7 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 				removeTo(true);
 				fromPosition = point;
 				setFromMarker("From");
+				Toast.makeText(this, "Click TO location", Toast.LENGTH_SHORT).show();
 			}
 		}
 
@@ -401,19 +428,14 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 
 
 	public void handleGetPlacesResult(ArrayList<String> result) {
-		//update the adapter
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(getBaseContext(), R.layout.list_item);
-		adapter.setNotifyOnChange(true);
-		//attach the adapter to textview
-		searchView.setAdapter(adapter);
+
+		adapter.clear();
 
 		for (String string : result){
-
 			Log.d("YourApp", "onPostExecute : result = " + string);
 			adapter.add(string);
-			adapter.notifyDataSetChanged();
-
 		}
+		adapter.notifyDataSetChanged();
 	}
 
 
@@ -423,8 +445,8 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 			removeDirection();
 		}
 
-		if(asyncTask != null){
-			asyncTask.cancel(true);
+		if(directionsAsyncTask != null){
+			directionsAsyncTask.cancel(true);
 		}
 
 		Map<String, String> map = new HashMap<String, String>();
@@ -434,8 +456,8 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 		map.put(GetDirectionsAsyncTask.DESTINATION_LONG, String.valueOf(toPosition.longitude));
 		map.put(GetDirectionsAsyncTask.DIRECTIONS_MODE, modeToString());
 
-		asyncTask = new GetDirectionsAsyncTask(this);
-		asyncTask.execute(map);
+		directionsAsyncTask = new GetDirectionsAsyncTask(this);
+		directionsAsyncTask.execute(map);
 
 		Log.d(TAG, "AsyncTask called");
 	}
@@ -484,14 +506,17 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 			double a1Lat = a1.getLatitude();
 			double a1Lng = a1.getLongitude();
 
-			double a1Distance = ((myLat-a1Lat)*(myLat-a1Lat)) + ((myLng-a1Lng)*(myLng-a1Lng));
+			float[] result1 = new float[1];
+			Location.distanceBetween(myLat, myLng, a1Lat, a1Lng, result1);
+
 
 			double a2Lat = a2.getLatitude();
 			double a2Lng = a2.getLongitude();
 
-			double a2Distance = ((myLat-a2Lat)*(myLat-a2Lat)) + ((myLng-a2Lng)*(myLng-a2Lng));
+			float[] result2 = new float[1];
+			Location.distanceBetween(myLat, myLng, a2Lat, a2Lng, result2);
 
-			return Double.compare(a1Distance, a2Distance);
+			return Float.compare(result1[0], result2[0]);
 		}
 	}
 
@@ -519,9 +544,6 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 
 	@Override
 	public boolean onMarkerClick(Marker marker) {
-		if(searchMarkers.contains(marker)) {
-			onMapClick(marker.getPosition());
-		}
 		return false;
 	}
 
@@ -543,33 +565,41 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 
 			//List<Address> addresses = geoCoder.getFromLocation(toPosition.latitude, toPosition.longitude, 4);
 			List<Address> addresses = geoCoder.getFromLocationName(address, MAX_RESULT);
-			int size = Math.min(1, addresses.size());
+			int size = addresses.size();
 
 			if (size > 0) {
-				LatLngBounds.Builder builder = new LatLngBounds.Builder();
-
-				Location myLoc = mapView.getMyLocation();
-				builder.include(new LatLng(myLoc.getLatitude(),myLoc.getLongitude()));
+//				LatLngBounds.Builder builder = new LatLngBounds.Builder();
+//
+//				Location myLoc = mapView.getMyLocation();
+//
+//				if(myLoc != null) {
+//					builder.include(new LatLng(myLoc.getLatitude(),myLoc.getLongitude()));
+//				}
 
 				Collections.sort(addresses, new AddressCameraComparator());
 
 				for (int i = 0; i<addresses.size(); i++){
+
+					LatLng temp = new LatLng(addresses.get(i).getLatitude(), addresses.get(i).getLongitude());
+
+
 					String strCompleteAddress= "";
 					for (int j=0; j<addresses.get(i).getMaxAddressLineIndex();j++) {
 						strCompleteAddress+= addresses.get(i).getAddressLine(j) + "\n";
 					}
-					LatLng temp = new LatLng(addresses.get(i).getLatitude(), addresses.get(i).getLongitude());
 					searchMarkers.add(setSearchMarker(temp, strCompleteAddress));
-					builder.include(temp);
+//					builder.include(temp);
 				}
 
-				LatLngBounds bounds = builder.build();
-				int padding = 200; // offset from edges of the map in pixels
-				CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
-				mapView.animateCamera(cu);
+//				LatLngBounds bounds = builder.build();
+//				int padding = 200; // offset from edges of the map in pixels
+//				CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+//				mapView.animateCamera(cu);
 
 
 			}
+
+			Toast.makeText(this,  size + " found.", Toast.LENGTH_SHORT).show();
 		}
 		catch (IOException e) {
 			Log.i("MyLocTAG => ", "this is the exception part");
@@ -587,8 +617,6 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 
 	@Override
 	public void onLocationChanged(Location arg0) {
-		// TODO Auto-generated method stub
-
 	}
 
 
@@ -609,6 +637,5 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 	@Override
 	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
 		// TODO Auto-generated method stub
-
 	}
 }

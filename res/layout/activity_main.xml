@@ -20,13 +20,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <com.google.android.maps.MapView
-        android:id="@+id/mapview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:apiKey="AIzaSyBf5Bx6WuYSxapZ0Wp0Iw_1FprYQ2eLjt4"
-        android:clickable="true" />
-
     <fragment
         android:id="@+id/map"
         android:layout_width="match_parent"
@@ -60,9 +53,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/transparent"
-            android:clickable="true"
-            android:onClick="onSummaryClick"
             android:orientation="horizontal"
+            android:onClick="onSummaryClick"
             android:visibility="invisible" >
 
             <ImageButton
@@ -71,17 +63,24 @@
                 android:layout_height="40dp"
                 android:layout_gravity="center"
                 android:contentDescription="@string/mode"
-                android:onClick="onModeClicked"
                 android:src="@drawable/driving" />
 
             <TextView
                 android:id="@+id/summary_text"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:textColor="@color/white" />
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:layout_gravity="center" />
         </LinearLayout>
     </LinearLayout>
+    
+    <ListView 
+        android:id="@+id/autotext"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="invisible"
+        android:layout_margin="50dp"/>
 
     <LinearLayout
         android:id="@+id/modes"
