@@ -43,6 +43,7 @@
             android:completionThreshold="1"
             android:hint="@string/search"
             android:imeOptions="actionSearch"
+            android:maxLines="1"
             android:singleLine="true" >
 
             <requestFocus />

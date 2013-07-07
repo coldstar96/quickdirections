@@ -106,8 +106,9 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 
 	private LocationManager locationManager;
 
+	private ArrayAdapter<String> adapter;
 
-	ArrayAdapter<String> adapter;
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -184,17 +185,27 @@ OnMarkerClickListener, OnEditorActionListener, LocationListener{
 //		});
 
 
-
-		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//		Criteria crit = new Criteria();
-//		crit.setAccuracy(Criteria.ACCURACY_FINE);
-//		String provider = locationManager.getBestProvider(crit, true);
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, this);
-
-
-		mapView.setLocationSource(null);
 	}
 
+
+  @Override
+  public void onResume() {
+      super.onResume();
+
+      /* Enable the my-location layer (this causes our LocationSource to be automatically activated.)
+       * While enabled, the my-location layer continuously draws an indication of a user's
+       * current location and bearing, and displays UI controls that allow a user to interact
+       * with their location (for example, to enable or disable camera tracking of their location and bearing).*/
+      mapView.setMyLocationEnabled(true);
+  }
+
+  @Override
+  public void onPause() {
+      /* Disable the my-location layer (this causes our LocationSource to be automatically deactivated.) */
+      mapView.setMyLocationEnabled(false);
+
+      super.onPause();
+  }
 
 	public void setSearchText(View view){
 		searchView.setSelectAllOnFocus(true);
